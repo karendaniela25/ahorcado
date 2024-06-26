@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego del Ahorcado</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-image: url(imagenes/fondoin.png);
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background-color: #fff;
+            padding:30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 500px;
+            text-align: center;
+        }
+
+        .login-container h2 {
+            margin-bottom: 20px;
+            color: #d35d6e;
+        }
+
+        .login-container input[type="text"], 
+        .login-container input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .login-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #d35d6e;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .login-container button:hover {
+            background-color: #c94b61;
+        }
+
+        .container {
+            text-align: center;
+            border: 2px solid #ff69b4;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        h1 {
+            color: #ff69b4;
+        }
+
+        #imagenes {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #palabra_imagen, #ahorcado {
+            margin: 20px;
+        }
+
+        #palabra_imagen img, #ahorcado img {
+            width: 200px;
+            height: auto;
+        }
+
+        #palabra_a_adivinar {
+            font-size: 32px;
+            margin: 20px 0;
+            letter-spacing: 10px;
+        }
+
+        #errores {
+            font-size: 18px;
+            color: red;
+        }
+
+        .letras {
+            margin: 20px 0;
+        }
+
+        #letra {
+            font-size: 24px;
+            width: 50px;
+            text-align: center;
+        }
+
+        button {
+            font-size: 18px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff69b4;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #ff1493;
+        }
+
+        input, button {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Inicio de Sesión</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Nombre de Usuario" required>
+            <input type="password" id="password" placeholder="Contraseña" required>
+            <button type="submit">Ingresar</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <h1>Juego del Ahorcado</h1>
+        <div id="imagenes">
+            <div id="palabra_imagen">
+                <img id="imagen_palabra" src="" alt="Palabra a Adivinar">
+            </div>
+            <div id="ahorcado">
+                <img id="imagen_ahorcado" src="imagenes/ahorcado0.png" alt="Ahorcado">
+            </div>
+        </div>
+        <div id="palabra_a_adivinar" class="palabra"></div>
+        <div id="errores" class="errores">Errores: 0</div>
+        <div class="letras">
+            <input type="text" id="letra" maxlength="1" placeholder="Ingresa una letra">
+            <button id="adivinar">Adivinar</button>
+        </div>
+        <button id="reiniciar">Reiniciar Juego</button>
+        <div id="puntuacion"></div>
+    </div>
+    
+    <script>
+        const palabras = [
+            { palabra: 'princesa', imagen: 'imagenes/princesa.png' },
+            { palabra: 'unicornios', imagen: 'imagenes/unicornio.png' },
+            { palabra: 'arcoiris', imagen: 'imagenes/arcoiris.png' },
+            { palabra: 'mariposas', imagen: 'imagenes/mariposas.png' },
+            { palabra: 'dulces', imagen: 'imagenes/dulces.png' },
+            { palabra: 'hadas', imagen: 'imagenes/hadas.png' },
+            { palabra: 'flores', imagen: 'imagenes/flores.png' }
+        ];
+
+        let palabraObj;
+        let palabraAdivinada;
+        let intentos;
+        const maxIntentos = 6;
+        let puntuacion = 0;
+        let username;
+
+        const imagenPalabra = document.getElementById('imagen_palabra');
+        const imagenAhorcado = document.getElementById('imagen_ahorcado');
+        const palabraAdivinarDiv = document.getElementById('palabra_a_adivinar');
+        const erroresDiv = document.getElementById('errores');
+        const letraInput = document.getElementById('letra');
+        const adivinarBtn = document.getElementById('adivinar');
+        const reiniciarBtn = document.getElementById('reiniciar');
+        const puntuacionDiv = document.getElementById('puntuacion');
+
+        function iniciarJuego() {
+            palabraObj = palabras[Math.floor(Math.random() * palabras.length)];
+            palabraAdivinada = Array(palabraObj.palabra.length).fill('_');
+            intentos = 0;
+            letraInput.value = '';
+            letraInput.focus();
+            imagenPalabra.src = palabraObj.imagen;
+            actualizarJuego();
+        }
+
+        function actualizarJuego() {
+            palabraAdivinarDiv.innerHTML = palabraAdivinada.join(' ');
+            imagenAhorcado.src = `imagenes/ahorcado${intentos}.png`;
+            erroresDiv.innerHTML = `Errores: ${intentos}`;
+            puntuacionDiv.innerHTML = `${username}: Puntuación ${puntuacion}`;
+        }
+
+        function adivinarLetra() {
+            const letra = letraInput.value.toLowerCase();
+            letraInput.value = '';
+            letraInput.focus();
+            if (!letra || palabraAdivinada.includes(letra)) return;
+
+            if (palabraObj.palabra.includes(letra)) {
+                for (let i = 0; i < palabraObj.palabra.length; i++) {
+                    if (palabraObj.palabra[i] === letra) {
+                        palabraAdivinada[i] = letra;
+                    }
+                }
+            } else {
+                intentos++;
+            }
+
+            actualizarJuego();
+
+            if (!palabraAdivinada.includes('_')) {
+                puntuacion += 10;
+                alert('¡Ganaste! La palabra era ' + palabraObj.palabra);
+                reiniciarJuego();
+            } else if (intentos >= maxIntentos) {
+                puntuacion -= 5;
+                alert('Perdiste. La palabra era ' + palabraObj.palabra);
+                reiniciarJuego();
+            }
+        }
+
+        function reiniciarJuego() {
+            iniciarJuego();
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            username = document.getElementById('username').value;
+            document.querySelector('.login-container').style.display = 'none';
+            document.querySelector('.container').style.display = 'block';
+            iniciarJuego();
+        });
+
+        adivinarBtn.addEventListener('click', adivinarLetra);
+        reiniciarBtn.addEventListener('click', reiniciarJuego);
+
+        iniciarJuego();
+    </script>
+</body>
+</html>
